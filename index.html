@@ -1,241 +1,315 @@
 <!DOCTYPE html>
-
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
-<title>داشبورد WSTG فارسی</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSTG Pentest Dashboard</title>
+
 <style>
-body {margin:0; font-family: Tahoma,sans-serif; background:#121212; color:#eee;}
-header {background:#1f1f1f; padding:20px; text-align:center; font-size:2em; color:#fbc02d;}
-.container {max-width:1200px; margin:auto; padding:20px;}
-section {margin-bottom:20px; border:1px solid #333; border-radius:10px; padding:15px; background:#1e1e1e;}
-h2 {color:#fbc02d;}
-ul li {margin-bottom:10px; padding:8px; background:#2a2a2a; border-radius:5px; list-style:none;}
-code {background:#333; padding:2px 5px; border-radius:3px; display:block; margin-top:5px; color:#4caf50;}
-input,textarea,button {width:100%; padding:8px; margin-top:5px; border-radius:5px; border:none; outline:none;}
-input,textarea {background:#2a2a2a; color:#eee;}
-button {background:#fbc02d; color:#121212; cursor:pointer; font-weight:bold;}
-button:hover {background:#ffeb3b;}
+body{
+    margin:0;
+    font-family:Tahoma, sans-serif;
+    background:#0d0d0d;
+    color:#eee;
+}
+header{
+    background:#111;
+    padding:15px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    border-bottom:1px solid #222;
+}
+.container{
+    padding:20px;
+    max-width:1200px;
+    margin:auto;
+}
+.card{
+    background:#161616;
+    padding:15px;
+    margin-bottom:15px;
+    border-radius:10px;
+    border:1px solid #222;
+}
+.card h3{
+    margin-top:0;
+    color:#00ff99;
+}
+pre{
+    background:#000;
+    padding:10px;
+    border-radius:8px;
+    overflow:auto;
+    color:#00ff99;
+}
+select,button,input{
+    padding:6px;
+    border-radius:6px;
+    border:none;
+    margin-top:5px;
+}
+button{
+    background:#00ff99;
+    cursor:pointer;
+    font-weight:bold;
+}
+button:hover{
+    opacity:0.8;
+}
+.status-open{color:#ff4444;}
+.status-progress{color:#ffaa00;}
+.status-closed{color:#00ff99;}
+.search{
+    margin-bottom:20px;
+}
 </style>
 </head>
-<body>
-<header>داشبورد کامل WSTG فارسی</header>
-<div class="container">
-<h2>اضافه کردن چک‌لیست جدید</h2>
-<input type="text" id="title" placeholder="عنوان تست">
-<textarea id="desc" placeholder="توضیح دقیق تست"></textarea>
-<input type="text" id="tools" placeholder="ابزار مورد نیاز (کاما جدا کنید)">
-<textarea id="cmd" placeholder="کامند مثال"></textarea>
-<button onclick="addItem()">اضافه کن</button>
 
-<h2>لیست چک‌لیست‌ها</h2>
-<ul id="list"></ul>
+<body>
+
+<header>🔥 WSTG Practical Pentest Dashboard 🔥</header>
+
+<div class="container">
+
+<div class="search">
+<input type="text" id="searchBox" placeholder="جستجو..." style="width:100%;">
+</div>
+
+<div id="items"></div>
+
+<button id="exportBtn">📤 Export Report (JSON)</button>
+
 </div>
 
 <script>
-const listEl = document.getElementById('list');
 
-function loadItems(){
-  const items = JSON.parse(localStorage.getItem('wstg') || '[]');
-  listEl.innerHTML = '';
-  items.forEach(it => {
-    const li = document.createElement('li');
-    li.innerHTML = `<b>${it.title}</b><br>${it.desc}<br><i>ابزار: ${it.tools}</i><br><code>${it.cmd}</code>`;
-    listEl.appendChild(li);
-  });
-}
-
-function addItem(){
-  const item = {
-    title: document.getElementById('title').value,
-    desc: document.getElementById('desc').value,
-    tools: document.getElementById('tools').value,
-    cmd: document.getElementById('cmd').value
-  };
-  if(!item.title || !item.desc) return alert('عنوان و توضیح ضروری هستند!');
-  const items = JSON.parse(localStorage.getItem('wstg') || '[]');
-  items.push(item);
-  localStorage.setItem('wstg', JSON.stringify(items));
-  document.getElementById('title').value = '';
-  document.getElementById('desc').value = '';
-  document.getElementById('tools').value = '';
-  document.getElementById('cmd').value = '';
-  loadItems();
-}
-
-const initial = [
-
-/* ==============================
-4.1 Information Gathering
-============================== */
+const initialData = [
 
 {
- title:"4.1.1 جمع‌آوری اطلاعات از موتورهای جستجو (OSINT)",
- desc:"هدف: شناسایی اطلاعات افشا شده درباره هدف از طریق گوگل، بینگ و ... شامل دامین‌های فرعی، فایل‌های حساس، ایمیل‌ها و پنل‌های مدیریتی.",
- tools:"Google Dorks, theHarvester, Amass",
- cmd:`site:target.com filetype:sql OR filetype:bak
-amass enum -d target.com
-
-theHarvester -d target.com -b google`
-},
-{
- title:"4.1.2 شناسایی Web Server",
- desc:"هدف: تشخیص نوع وب سرور و نسخه آن جهت بررسی آسیب‌پذیری‌های شناخته‌شده.",
- tools:"nmap, whatweb, curl",
- cmd:`nmap -sV -p 80,443 target.com
-whatweb https://target.com
-curl -I https://target.com`
+id:1,
+category:"Information Gathering",
+title:"4.1.1 OSINT",
+desc:"جمع‌آوری اطلاعات عمومی شامل ساب‌دامین، ایمیل و فایل‌های افشاشده.",
+tools:"Google Dorks, Amass",
+cmd:"amass enum -d target.com",
+severity:"Low",
+status:"Open"
 },
 
-/* ==============================
-4.2 Configuration & Deployment
-============================== */
-
 {
- title:"4.2.6 تست HTTP Methods",
- desc:"بررسی فعال بودن متدهای خطرناک مانند PUT, DELETE, TRACE که ممکن است امکان آپلود یا حملات XST بدهند.",
- tools:"nmap, Burp Suite, curl",
- cmd:`nmap --script http-methods -p 80 target.com
-curl -X TRACE https://target.com`
-},
-{
- title:"4.2.10 Subdomain Takeover",
- desc:"بررسی CNAMEهای بدون استفاده که به سرویس‌های حذف‌شده اشاره می‌کنند.",
- tools:"subfinder, dig",
- cmd:`subfinder -d target.com
-dig sub.target.com`
+id:2,
+category:"Configuration",
+title:"4.2.6 HTTP Methods",
+desc:"بررسی فعال بودن متدهای خطرناک مانند PUT و DELETE.",
+tools:"nmap",
+cmd:"nmap --script http-methods -p 80 target.com",
+severity:"Medium",
+status:"Open"
 },
 
-/* ==============================
-4.3 Authentication Testing
-============================== */
-
 {
- title:"4.4.2 تست Default Credentials",
- desc:"بررسی وجود حساب‌های پیش‌فرض با پسوردهای ساده.",
- tools:"Hydra, Medusa",
- cmd:`hydra -l admin -P rockyou.txt target.com http-post-form`
-},
-{
- title:"4.4.7 تست سیاست رمز عبور ضعیف",
- desc:"بررسی حداقل طول رمز، پیچیدگی و نبود rate limiting.",
- tools:"Burp Intruder",
- cmd:`ارسال لیست پسوردهای ضعیف از طریق Intruder و بررسی پاسخ‌ها`
+id:3,
+category:"Authentication",
+title:"4.4.2 Default Credentials",
+desc:"بررسی وجود یوزر/پسورد پیش‌فرض.",
+tools:"Hydra",
+cmd:"hydra -l admin -P rockyou.txt target.com http-post-form",
+severity:"High",
+status:"Open"
 },
 
-/* ==============================
-4.5 Authorization
-============================== */
-
 {
- title:"4.5.4 Insecure Direct Object Reference (IDOR)",
- desc:"تغییر مستقیم شناسه‌های عددی یا UUID برای دسترسی به داده کاربران دیگر.",
- tools:"Burp Suite",
- cmd:`GET /api/user?id=1001 -> تغییر به 1002`
-},
-
-/* ==============================
-4.6 Session Management
-============================== */
-
-{
- title:"4.6.3 Session Fixation",
- desc:"بررسی عدم تغییر session id پس از لاگین.",
- tools:"Burp Suite",
- cmd:`قبل از لاگین session را ذخیره کن و بررسی کن بعد از لاگین تغییر کرده یا نه`
-},
-
-/* ==============================
-4.7 Input Validation
-============================== */
-
-{
- title:"4.7.5 SQL Injection",
- desc:"تزریق کاراکترهای خاص برای استخراج داده از پایگاه داده.",
- tools:"sqlmap, Burp Suite",
- cmd:`sqlmap -u "https://target.com/page?id=1" --dbs --batch`
-},
-{
- title:"4.7.1 Reflected XSS",
- desc:"تزریق اسکریپت در پارامتر و بررسی بازتاب آن در پاسخ HTML.",
- tools:"Burp Suite, OWASP ZAP",
- cmd:`<script>alert(1)</script>`
-
-},
-{
-title:"4.7.12 Command Injection",
-desc:"تزریق دستورات سیستم‌عامل در پارامترهای ورودی.",
+id:4,
+category:"Authorization",
+title:"4.5.4 IDOR",
+desc:"تغییر شناسه عددی برای دسترسی به داده سایر کاربران.",
 tools:"Burp Suite",
-cmd:`;id
-&& whoami`
+cmd:"GET /api/user?id=1002",
+severity:"High",
+status:"Open"
 },
+
 {
-title:"4.7.19 Server-Side Request Forgery (SSRF)",
-desc:"ارسال درخواست به سرویس‌های داخلی از طریق پارامتر URL.",
+id:5,
+category:"Input Validation",
+title:"4.7.5 SQL Injection",
+desc:"تزریق کوئری SQL برای استخراج دیتابیس.",
+tools:"sqlmap",
+cmd:"sqlmap -u https://target.com/page?id=1 --dbs",
+severity:"Critical",
+status:"Open"
+},
+
+{
+id:6,
+category:"Input Validation",
+title:"4.7.1 Reflected XSS",
+desc:"تزریق اسکریپت و بررسی بازتاب در پاسخ.",
 tools:"Burp Suite",
-cmd:`http://127.0.0.1:80`
+cmd:"<script>alert(1)</script>",
+severity:"High",
+status:"Open"
 },
 
-/* ==============================
-4.8 Error Handling
-============================== */
-
 {
-title:"4.8.1 Improper Error Handling",
-desc:"بررسی نمایش Stack Trace یا خطاهای دیتابیس در پاسخ.",
+id:7,
+category:"Session",
+title:"4.6.3 Session Fixation",
+desc:"بررسی تغییر نکردن session بعد از لاگین.",
 tools:"Burp Suite",
-cmd:`ارسال ورودی غیرمجاز مانند ' در فرم‌ها`
+cmd:"Check session before and after login",
+severity:"Medium",
+status:"Open"
 },
 
-/* ==============================
-4.9 Weak Cryptography
-============================== */
-
 {
+id:8,
+category:"Crypto",
 title:"4.9.1 Weak TLS",
 desc:"بررسی نسخه‌های قدیمی SSL/TLS.",
-tools:"nmap, sslscan",
-cmd:`nmap --script ssl-enum-ciphers -p 443 target.com`
+tools:"nmap",
+cmd:"nmap --script ssl-enum-ciphers -p 443 target.com",
+severity:"Medium",
+status:"Open"
 },
 
-/* ==============================
-4.10 Business Logic
-============================== */
-
 {
-title:"4.10.6 Circumvention of Workflows",
-desc:"رد کردن مراحل اجباری خرید یا پرداخت.",
+id:9,
+category:"Business Logic",
+title:"4.10.6 Workflow Bypass",
+desc:"رد کردن مرحله پرداخت یا تأیید.",
 tools:"Burp Suite",
-cmd:`حذف مرحله پرداخت و ارسال مستقیم درخواست نهایی`
+cmd:"Remove payment step request",
+severity:"High",
+status:"Open"
 },
 
-/* ==============================
-4.11 Client-Side
-============================== */
-
 {
+id:10,
+category:"Client-Side",
 title:"4.11.9 Clickjacking",
-desc:"بررسی امکان iframe شدن سایت بدون X-Frame-Options.",
-tools:"Browser DevTools",
-cmd:`<iframe src=\"https://target.com\"></iframe>`
+desc:"بررسی نبود X-Frame-Options.",
+tools:"Browser",
+cmd:"<iframe src='https://target.com'></iframe>",
+severity:"Medium",
+status:"Open"
 },
 
-/* ==============================
-4.12 API Testing
-============================== */
-
 {
-title:"4.12.1 GraphQL Testing",
-desc:"بررسی introspection فعال و دسترسی غیرمجاز به schema.",
-tools:"Burp Suite, curl",
-cmd:`curl -X POST https://target.com/graphql -d '{"query":"{__schema{types{name}}}"}'`
+id:11,
+category:"API",
+title:"4.12.1 GraphQL Introspection",
+desc:"بررسی فعال بودن introspection.",
+tools:"curl",
+cmd:"curl -X POST https://target.com/graphql",
+severity:"High",
+status:"Open"
 }
 
 ];
 
-if(!localStorage.getItem('wstg')) localStorage.setItem('wstg', JSON.stringify(initial));
+if(!localStorage.getItem("wstgData")){
+localStorage.setItem("wstgData", JSON.stringify(initialData));
+}
 
-loadItems(); </script>
+function getData(){
+return JSON.parse(localStorage.getItem("wstgData"));
+}
+
+function saveData(data){
+localStorage.setItem("wstgData", JSON.stringify(data));
+}
+
+function render(){
+const container = document.getElementById("items");
+container.innerHTML="";
+const data = getData();
+
+data.forEach(item=>{
+const div = document.createElement("div");
+div.className="card";
+
+div.innerHTML = `
+<h3>${item.title}</h3>
+<p><b>Category:</b> ${item.category}</p>
+<p>${item.desc}</p>
+<p><b>Tools:</b> ${item.tools}</p>
+<pre>${item.cmd}</pre>
+<p>
+Severity:
+<select data-id="${item.id}" class="severitySelect">
+<option ${item.severity==="Low"?"selected":""}>Low</option>
+<option ${item.severity==="Medium"?"selected":""}>Medium</option>
+<option ${item.severity==="High"?"selected":""}>High</option>
+<option ${item.severity==="Critical"?"selected":""}>Critical</option>
+</select>
+</p>
+<p>
+Status:
+<select data-id="${item.id}" class="statusSelect">
+<option ${item.status==="Open"?"selected":""}>Open</option>
+<option ${item.status==="In Progress"?"selected":""}>In Progress</option>
+<option ${item.status==="Closed"?"selected":""}>Closed</option>
+</select>
+</p>
+`;
+
+container.appendChild(div);
+});
+
+attachEvents();
+}
+
+function attachEvents(){
+
+document.querySelectorAll(".severitySelect").forEach(select=>{
+select.addEventListener("change",function(){
+let data = getData();
+const id = parseInt(this.dataset.id);
+data = data.map(item=>{
+if(item.id===id){item.severity=this.value;}
+return item;
+});
+saveData(data);
+});
+});
+
+document.querySelectorAll(".statusSelect").forEach(select=>{
+select.addEventListener("change",function(){
+let data = getData();
+const id = parseInt(this.dataset.id);
+data = data.map(item=>{
+if(item.id===id){item.status=this.value;}
+return item;
+});
+saveData(data);
+});
+});
+
+}
+
+document.getElementById("searchBox").addEventListener("input",function(){
+const keyword = this.value.toLowerCase();
+const cards = document.querySelectorAll(".card");
+cards.forEach(card=>{
+card.style.display = card.innerText.toLowerCase().includes(keyword) ? "block" : "none";
+});
+});
+
+document.getElementById("exportBtn").addEventListener("click",function(){
+const data = getData();
+const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const url = URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href=url;
+a.download="wstg-report.json";
+a.click();
+});
+
+render();
+
+</script>
 
 </body>
 </html>

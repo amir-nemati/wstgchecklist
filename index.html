@@ -1,27 +1,36 @@
 <!DOCTYPE html>
+
 <html lang="fa">
 <head>
 <meta charset="UTF-8">
 <title>داشبورد WSTG فارسی</title>
 <style>
-body { font-family: Tahoma; direction: rtl; padding: 20px; background: #f0f0f0; }
-textarea { width: 100%; height: 50px; margin-bottom: 10px; }
-input, button { padding: 5px; margin: 5px 0; }
-li { margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 5px; }
+body {margin:0; font-family: Tahoma,sans-serif; background:#121212; color:#eee;}
+header {background:#1f1f1f; padding:20px; text-align:center; font-size:2em; color:#fbc02d;}
+.container {max-width:1200px; margin:auto; padding:20px;}
+section {margin-bottom:20px; border:1px solid #333; border-radius:10px; padding:15px; background:#1e1e1e;}
+h2 {color:#fbc02d;}
+ul li {margin-bottom:10px; padding:8px; background:#2a2a2a; border-radius:5px; list-style:none;}
+code {background:#333; padding:2px 5px; border-radius:3px; display:block; margin-top:5px; color:#4caf50;}
+input,textarea,button {width:100%; padding:8px; margin-top:5px; border-radius:5px; border:none; outline:none;}
+input,textarea {background:#2a2a2a; color:#eee;}
+button {background:#fbc02d; color:#121212; cursor:pointer; font-weight:bold;}
+button:hover {background:#ffeb3b;}
 </style>
 </head>
 <body>
-<h1>داشبورد WSTG فارسی</h1>
-
-<h3>اضافه کردن چک‌لیست جدید</h3>
+<header>داشبورد کامل WSTG فارسی</header>
+<div class="container">
+<h2>اضافه کردن چک‌لیست جدید</h2>
 <input type="text" id="title" placeholder="عنوان تست">
-<textarea id="desc" placeholder="توضیح فارسی"></textarea>
+<textarea id="desc" placeholder="توضیح دقیق تست"></textarea>
 <input type="text" id="tools" placeholder="ابزار مورد نیاز (کاما جدا کنید)">
-<textarea id="cmd" placeholder="کامند یا مثال"></textarea>
+<textarea id="cmd" placeholder="کامند مثال"></textarea>
 <button onclick="addItem()">اضافه کن</button>
 
-<h3>لیست چک‌لیست‌ها</h3>
+<h2>لیست چک‌لیست‌ها</h2>
 <ul id="list"></ul>
+</div>
 
 <script>
 const listEl = document.getElementById('list');
@@ -43,6 +52,7 @@ function addItem(){
     tools: document.getElementById('tools').value,
     cmd: document.getElementById('cmd').value
   };
+  if(!item.title || !item.desc) return alert('عنوان و توضیح ضروری هستند!');
   const items = JSON.parse(localStorage.getItem('wstg') || '[]');
   items.push(item);
   localStorage.setItem('wstg', JSON.stringify(items));
@@ -53,7 +63,18 @@ function addItem(){
   loadItems();
 }
 
-loadItems();
-</script>
+const initial = [
+  {title:'SQL Injection',desc:'تست تزریق SQL روی فرم‌ها و URLها برای دسترسی غیرمجاز به دیتابیس.',tools:'sqlmap, Burp Suite',cmd:`python sqlmap.py -u 'https://target.com/?id=1' --batch`},
+  {title:'XSS Reflected',desc:'تست حملات XSS منعکس شده در پاسخ وب سرور.',tools:'Burp Suite, OWASP ZAP',cmd:`payload: <script>alert('XSS')</script>`},
+
+{title:'Directory Traversal',desc:'تست دسترسی به فایل‌های حساس با ../ یا مسیرهای مخفی.',tools:'curl, Burp Suite',cmd:`curl https://target.com/page?file=../../etc/passwd`},
+{title:'Test Network Infrastructure',desc:'بررسی پیکربندی شبکه و نقاط ضعف در دیواره‌های آتش و سرورها.',tools:'nmap, netcat',cmd:`nmap -sV target.com`},
+{title:'Test Default Credentials',desc:'بررسی حساب‌های پیش‌فرض و پسوردهای ضعیف.',tools:'Hydra, Medusa',cmd:`hydra -l admin -P passwords.txt target.com ssh`}
+];
+
+if(!localStorage.getItem('wstg')) localStorage.setItem('wstg', JSON.stringify(initial));
+
+loadItems(); </script>
+
 </body>
 </html>

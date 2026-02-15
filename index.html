@@ -64,12 +64,173 @@ function addItem(){
 }
 
 const initial = [
-  {title:'SQL Injection',desc:'تست تزریق SQL روی فرم‌ها و URLها برای دسترسی غیرمجاز به دیتابیس.',tools:'sqlmap, Burp Suite',cmd:`python sqlmap.py -u 'https://target.com/?id=1' --batch`},
-  {title:'XSS Reflected',desc:'تست حملات XSS منعکس شده در پاسخ وب سرور.',tools:'Burp Suite, OWASP ZAP',cmd:`payload: <script>alert('XSS')</script>`},
 
-{title:'Directory Traversal',desc:'تست دسترسی به فایل‌های حساس با ../ یا مسیرهای مخفی.',tools:'curl, Burp Suite',cmd:`curl https://target.com/page?file=../../etc/passwd`},
-{title:'Test Network Infrastructure',desc:'بررسی پیکربندی شبکه و نقاط ضعف در دیواره‌های آتش و سرورها.',tools:'nmap, netcat',cmd:`nmap -sV target.com`},
-{title:'Test Default Credentials',desc:'بررسی حساب‌های پیش‌فرض و پسوردهای ضعیف.',tools:'Hydra, Medusa',cmd:`hydra -l admin -P passwords.txt target.com ssh`}
+/* ==============================
+4.1 Information Gathering
+============================== */
+
+{
+ title:"4.1.1 جمع‌آوری اطلاعات از موتورهای جستجو (OSINT)",
+ desc:"هدف: شناسایی اطلاعات افشا شده درباره هدف از طریق گوگل، بینگ و ... شامل دامین‌های فرعی، فایل‌های حساس، ایمیل‌ها و پنل‌های مدیریتی.",
+ tools:"Google Dorks, theHarvester, Amass",
+ cmd:`site:target.com filetype:sql OR filetype:bak
+amass enum -d target.com
+
+theHarvester -d target.com -b google`
+},
+{
+ title:"4.1.2 شناسایی Web Server",
+ desc:"هدف: تشخیص نوع وب سرور و نسخه آن جهت بررسی آسیب‌پذیری‌های شناخته‌شده.",
+ tools:"nmap, whatweb, curl",
+ cmd:`nmap -sV -p 80,443 target.com
+whatweb https://target.com
+curl -I https://target.com`
+},
+
+/* ==============================
+4.2 Configuration & Deployment
+============================== */
+
+{
+ title:"4.2.6 تست HTTP Methods",
+ desc:"بررسی فعال بودن متدهای خطرناک مانند PUT, DELETE, TRACE که ممکن است امکان آپلود یا حملات XST بدهند.",
+ tools:"nmap, Burp Suite, curl",
+ cmd:`nmap --script http-methods -p 80 target.com
+curl -X TRACE https://target.com`
+},
+{
+ title:"4.2.10 Subdomain Takeover",
+ desc:"بررسی CNAMEهای بدون استفاده که به سرویس‌های حذف‌شده اشاره می‌کنند.",
+ tools:"subfinder, dig",
+ cmd:`subfinder -d target.com
+dig sub.target.com`
+},
+
+/* ==============================
+4.3 Authentication Testing
+============================== */
+
+{
+ title:"4.4.2 تست Default Credentials",
+ desc:"بررسی وجود حساب‌های پیش‌فرض با پسوردهای ساده.",
+ tools:"Hydra, Medusa",
+ cmd:`hydra -l admin -P rockyou.txt target.com http-post-form`
+},
+{
+ title:"4.4.7 تست سیاست رمز عبور ضعیف",
+ desc:"بررسی حداقل طول رمز، پیچیدگی و نبود rate limiting.",
+ tools:"Burp Intruder",
+ cmd:`ارسال لیست پسوردهای ضعیف از طریق Intruder و بررسی پاسخ‌ها`
+},
+
+/* ==============================
+4.5 Authorization
+============================== */
+
+{
+ title:"4.5.4 Insecure Direct Object Reference (IDOR)",
+ desc:"تغییر مستقیم شناسه‌های عددی یا UUID برای دسترسی به داده کاربران دیگر.",
+ tools:"Burp Suite",
+ cmd:`GET /api/user?id=1001 -> تغییر به 1002`
+},
+
+/* ==============================
+4.6 Session Management
+============================== */
+
+{
+ title:"4.6.3 Session Fixation",
+ desc:"بررسی عدم تغییر session id پس از لاگین.",
+ tools:"Burp Suite",
+ cmd:`قبل از لاگین session را ذخیره کن و بررسی کن بعد از لاگین تغییر کرده یا نه`
+},
+
+/* ==============================
+4.7 Input Validation
+============================== */
+
+{
+ title:"4.7.5 SQL Injection",
+ desc:"تزریق کاراکترهای خاص برای استخراج داده از پایگاه داده.",
+ tools:"sqlmap, Burp Suite",
+ cmd:`sqlmap -u "https://target.com/page?id=1" --dbs --batch`
+},
+{
+ title:"4.7.1 Reflected XSS",
+ desc:"تزریق اسکریپت در پارامتر و بررسی بازتاب آن در پاسخ HTML.",
+ tools:"Burp Suite, OWASP ZAP",
+ cmd:`<script>alert(1)</script>`
+
+},
+{
+title:"4.7.12 Command Injection",
+desc:"تزریق دستورات سیستم‌عامل در پارامترهای ورودی.",
+tools:"Burp Suite",
+cmd:`;id
+&& whoami`
+},
+{
+title:"4.7.19 Server-Side Request Forgery (SSRF)",
+desc:"ارسال درخواست به سرویس‌های داخلی از طریق پارامتر URL.",
+tools:"Burp Suite",
+cmd:`http://127.0.0.1:80`
+},
+
+/* ==============================
+4.8 Error Handling
+============================== */
+
+{
+title:"4.8.1 Improper Error Handling",
+desc:"بررسی نمایش Stack Trace یا خطاهای دیتابیس در پاسخ.",
+tools:"Burp Suite",
+cmd:`ارسال ورودی غیرمجاز مانند ' در فرم‌ها`
+},
+
+/* ==============================
+4.9 Weak Cryptography
+============================== */
+
+{
+title:"4.9.1 Weak TLS",
+desc:"بررسی نسخه‌های قدیمی SSL/TLS.",
+tools:"nmap, sslscan",
+cmd:`nmap --script ssl-enum-ciphers -p 443 target.com`
+},
+
+/* ==============================
+4.10 Business Logic
+============================== */
+
+{
+title:"4.10.6 Circumvention of Workflows",
+desc:"رد کردن مراحل اجباری خرید یا پرداخت.",
+tools:"Burp Suite",
+cmd:`حذف مرحله پرداخت و ارسال مستقیم درخواست نهایی`
+},
+
+/* ==============================
+4.11 Client-Side
+============================== */
+
+{
+title:"4.11.9 Clickjacking",
+desc:"بررسی امکان iframe شدن سایت بدون X-Frame-Options.",
+tools:"Browser DevTools",
+cmd:`<iframe src=\"https://target.com\"></iframe>`
+},
+
+/* ==============================
+4.12 API Testing
+============================== */
+
+{
+title:"4.12.1 GraphQL Testing",
+desc:"بررسی introspection فعال و دسترسی غیرمجاز به schema.",
+tools:"Burp Suite, curl",
+cmd:`curl -X POST https://target.com/graphql -d '{"query":"{__schema{types{name}}}"}'`
+}
+
 ];
 
 if(!localStorage.getItem('wstg')) localStorage.setItem('wstg', JSON.stringify(initial));

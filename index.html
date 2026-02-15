@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>داشبورد WSTG فارسی</title>
+<style>
+body { font-family: Tahoma; direction: rtl; padding: 20px; background: #f0f0f0; }
+textarea { width: 100%; height: 50px; margin-bottom: 10px; }
+input, button { padding: 5px; margin: 5px 0; }
+li { margin-bottom: 15px; background: #fff; padding: 10px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<h1>داشبورد WSTG فارسی</h1>
+
+<h3>اضافه کردن چک‌لیست جدید</h3>
+<input type="text" id="title" placeholder="عنوان تست">
+<textarea id="desc" placeholder="توضیح فارسی"></textarea>
+<input type="text" id="tools" placeholder="ابزار مورد نیاز (کاما جدا کنید)">
+<textarea id="cmd" placeholder="کامند یا مثال"></textarea>
+<button onclick="addItem()">اضافه کن</button>
+
+<h3>لیست چک‌لیست‌ها</h3>
+<ul id="list"></ul>
+
+<script>
+const listEl = document.getElementById('list');
+
+function loadItems(){
+  const items = JSON.parse(localStorage.getItem('wstg') || '[]');
+  listEl.innerHTML = '';
+  items.forEach(it => {
+    const li = document.createElement('li');
+    li.innerHTML = `<b>${it.title}</b><br>${it.desc}<br><i>ابزار: ${it.tools}</i><br><code>${it.cmd}</code>`;
+    listEl.appendChild(li);
+  });
+}
+
+function addItem(){
+  const item = {
+    title: document.getElementById('title').value,
+    desc: document.getElementById('desc').value,
+    tools: document.getElementById('tools').value,
+    cmd: document.getElementById('cmd').value
+  };
+  const items = JSON.parse(localStorage.getItem('wstg') || '[]');
+  items.push(item);
+  localStorage.setItem('wstg', JSON.stringify(items));
+  document.getElementById('title').value = '';
+  document.getElementById('desc').value = '';
+  document.getElementById('tools').value = '';
+  document.getElementById('cmd').value = '';
+  loadItems();
+}
+
+loadItems();
+</script>
+</body>
+</html>
